@@ -156,7 +156,7 @@ El ambiente de desarrollo usa **Air** para hot-reload automático:
 task dev:up
 
 # Los cambios en el código se recargan automáticamente
-# Server: http://localhost:8080
+# Server: http://localhost:8086
 # RabbitMQ Management: http://localhost:15672 (guest/guest)
 ```
 
@@ -165,7 +165,7 @@ task dev:up
 ```yaml
 services:
   rabbitmq:   # Puerto 5672 (AMQP), 15672 (Management)
-  server:     # Puerto 8080, hot-reload habilitado
+  server:     # Puerto 8086, hot-reload habilitado
   client:     # Consumidor con hot-reload
 ```
 
@@ -385,7 +385,7 @@ task build:all
 
 ```bash
 # Permitir puertos necesarios
-sudo ufw allow 8080/tcp   # API Server
+sudo ufw allow 8086/tcp   # API Server
 sudo ufw allow 5671/tcp   # RabbitMQ AMQPS
 sudo ufw allow 15672/tcp  # RabbitMQ Management (opcional)
 sudo ufw enable
@@ -408,7 +408,7 @@ server {
     ssl_certificate_key /opt/POC-AMQPS/certs/server-key.pem;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://localhost:8086;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
@@ -518,7 +518,7 @@ Publica un mensaje en la cola de RabbitMQ.
 
 **Ejemplo:**
 ```bash
-curl -X POST http://localhost:8080/api/messages \
+curl -X POST http://localhost:8086/api/messages \
   -H "Content-Type: application/json" \
   -d '{
     "content": "Hola desde el API!",

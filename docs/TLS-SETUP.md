@@ -107,7 +107,7 @@ A       pocapi      <IP-de-tu-VPS>    600      API REST
 
 Esto creará:
 - **RabbitMQ:** `pocmq.yourdomain.com:5671` (AMQPS)
-- **API:** `pocapi.yourdomain.com:8080` (HTTP/HTTPS)
+- **API:** `pocapi.yourdomain.com:8086` (HTTP/HTTPS)
 - **Management UI:** `pocmq.yourdomain.com:15672` (HTTP)
 
 ### Verificar DNS
@@ -287,7 +287,7 @@ task tls:generate
 task dev:up
 
 # 4. Probar conexión
-curl -k https://localhost:8080/health
+curl -k https://localhost:8086/health
 ```
 
 ## 📊 Troubleshooting

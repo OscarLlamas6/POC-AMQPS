@@ -17,7 +17,7 @@ type ClientConfig struct {
 
 func LoadServerConfig() *ServerConfig {
 	return &ServerConfig{
-		Port:        getEnv("SERVER_PORT", "8080"),
+		Port:        getEnv("SERVER_PORT", "8086"),
 		RabbitMQURL: getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
 		QueueName:   getEnv("QUEUE_NAME", "messages"),
 	}

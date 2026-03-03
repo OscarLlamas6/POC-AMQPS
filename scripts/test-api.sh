@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER_URL="${SERVER_URL:-http://localhost:8080}"
+SERVER_URL="${SERVER_URL:-http://localhost:8086}"
 
 echo "Testing Messaging API"
 echo "====================="
