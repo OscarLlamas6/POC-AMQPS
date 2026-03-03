@@ -1,0 +1,121 @@
+version: '3'
+
+vars:
+  SERVER_BINARY: bin/server
+  CLIENT_BINARY: bin/client
+
+tasks:
+  deps:
+    desc: Download Go dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  build:server:
+    desc: Build server binary
+    cmds:
+      - go build -o {{.SERVER_BINARY}} cmd/server/main.go
+
+  build:client:
+    desc: Build client binary
+    cmds:
+      - go build -o {{.CLIENT_BINARY}} cmd/client/main.go
+
+  build:all:
+    desc: Build all binaries
+    deps: [build:server, build:client]
+
+  run:server:
+    desc: Run server locally
+    cmds:
+      - go run cmd/server/main.go
+
+  run:client:
+    desc: Run client locally
+    cmds:
+      - go run cmd/client/main.go
+
+  dev:up:
+    desc: Start local development environment (RabbitMQ + Server + Client)
+    cmds:
+      - docker compose -f docker-compose.dev.yml up -d
+
+  dev:down:
+    desc: Stop local development environment
+    cmds:
+      - docker compose -f docker-compose.dev.yml down
+
+  dev:logs:
+    desc: Show logs from development environment
+    cmds:
+      - docker compose -f docker-compose.dev.yml logs -f {{.CLI_ARGS}}
+
+  prod:up:
+    desc: Start production environment
+    cmds:
+      - docker compose -f docker-compose.prod.yml up -d
+
+  prod:down:
+    desc: Stop production environment
+    cmds:
+      - docker compose -f docker-compose.prod.yml down
+
+  prod:logs:
+    desc: Show logs from production environment
+    cmds:
+      - docker compose -f docker-compose.prod.yml logs -f {{.CLI_ARGS}}
+
+  docker:build:
+    desc: Build Docker images using Docker Bake
+    cmds:
+      - docker buildx bake -f docker-bake.hcl {{.CLI_ARGS}}
+
+  docker:build:dev:
+    desc: Build development images
+    cmds:
+      - docker buildx bake -f docker-bake.hcl dev
+
+  docker:build:prod:
+    desc: Build production images
+    cmds:
+      - docker buildx bake -f docker-bake.hcl prod
+
+  docker:build:all:
+    desc: Build all images (dev + prod)
+    cmds:
+      - docker buildx bake -f docker-bake.hcl --set *.platform=linux/amd64,linux/arm64
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v ./...
+
+  test:api:
+    desc: Test API endpoints
+    cmds:
+      - chmod +x scripts/test-api.sh
+      - ./scripts/test-api.sh
+
+  clean:
+    desc: Clean build artifacts and Docker resources
+    cmds:
+      - rm -rf bin/
+      - go clean
+      - docker compose -f docker-compose.dev.yml down -v
+      - docker compose -f docker-compose.prod.yml down -v
+
+  tls:generate:
+    desc: Generate self-signed TLS certificates for testing
+    cmds:
+      - mkdir -p certs
+      - |
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+          -keyout certs/wildcard.key \
+          -out certs/wildcard_bundle.crt \
+          -subj "/C=US/ST=State/L=City/O=Organization/CN=*.yourdomain.com"
+      - chmod 644 certs/wildcard.key
+      - chmod 644 certs/wildcard_bundle.crt
+      - echo "TLS certificates generated in ./certs/"
+      - echo "  - wildcard_bundle.crt (certificate)"
+      - echo "  - wildcard.key (private key)"
+      - echo "Note - Key file has 644 permissions for Docker compatibility"

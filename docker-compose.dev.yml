@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq-dev
+    ports:
+      - "5671:5671"
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_dev_data:/var/lib/rabbitmq
+      - ./certs:/etc/rabbitmq/ssl:ro
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-dev
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+      target: dev
+    container_name: server-dev
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      RABBITMQ_URL: amqps://guest:guest@rabbitmq:5671/?tls_server_name=rabbitmq
+      QUEUE_NAME: messages
+    volumes:
+      - .:/app
+      - /app/tmp
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - messaging-dev
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+      target: dev
+    container_name: client-dev
+    environment:
+      RABBITMQ_URL: amqps://guest:guest@rabbitmq:5671/?tls_server_name=rabbitmq
+      QUEUE_NAME: messages
+    volumes:
+      - .:/app
+      - /app/tmp
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - messaging-dev
+
+networks:
+  messaging-dev:
+    driver: bridge
+
+volumes:
+  rabbitmq_dev_data:

@@ -1,0 +1,21 @@
+FROM golang:1.23-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache git ca-certificates tzdata
+COPY go.mod go.sum ./
+RUN go mod download
+
+FROM base AS dev
+RUN apk add --no-cache curl && \
+    curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b /usr/local/bin
+COPY . .
+CMD ["air", "-c", ".air.client.toml"]
+
+FROM base AS builder
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o client cmd/client/main.go
+
+FROM alpine:latest AS prod
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /root/
+COPY --from=builder /app/client .
+CMD ["./client"]
